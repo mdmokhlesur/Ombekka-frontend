@@ -1,7 +1,7 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import { getAllPlayers } from '@/lib/mock-data';
-import PlayerSearch from '@/components/player-search';
+import Image from "next/image";
+import Link from "next/link";
+import { getAllPlayers } from "@/lib/mock-data";
+import PlayerSearch from "@/components/player-search";
 
 // Total from API meta
 const TOTAL_GAMES = 51319;
@@ -10,7 +10,6 @@ const TOTAL_GAMES = 51319;
 const FIRST_PLAYERS = getAllPlayers().slice(0, 4);
 
 export default function Home() {
-  
   return (
     <main className="min-h-screen bg-[#f7f8fa]">
       {/* Top accent bar */}
@@ -18,7 +17,7 @@ export default function Home() {
 
       <div className="max-w-[960px] mx-auto px-6 py-10 md:py-16">
         {/* Header section — left-aligned */}
-        <header className="mb-8">
+        <header className="mb-6">
           <div className="mb-4">
             <div className="relative w-[180px] h-[180px]">
               <Image
@@ -30,10 +29,10 @@ export default function Home() {
               />
             </div>
           </div>
-          <h1 className="text-[2.75rem] font-light text-[#1a1a1a] tracking-tight leading-[1.1] mb-4">
+          <h1 className="text-[2.25rem] font-[500] text-[#1a1a1a] tracking-tight leading-[1.1] mb-2">
             Bekke Research Library
           </h1>
-          <p className="text-[1.4rem] text-[#666] leading-relaxed max-w-[700px]">
+          <p className="text-[1.2rem] text-[#666] leading-relaxed">
             Free and open access to comprehensive chess game data and analytics
           </p>
         </header>
@@ -46,7 +45,10 @@ export default function Home() {
         {/* Data section - first 4 players */}
         <section className="pt-4">
           <h2 className="text-2xl font-semibold text-[#1a1a1a] mb-4 flex items-baseline gap-2">
-            Data <span className="font-normal text-[#666] text-lg">{TOTAL_GAMES.toLocaleString()}</span>
+            Data{" "}
+            <span className="font-normal text-[#666] text-lg">
+              {TOTAL_GAMES.toLocaleString()}
+            </span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
@@ -59,16 +61,28 @@ export default function Home() {
                 <div className="text-lg font-bold text-[#1a1a1a] mb-3 leading-[1.2] group-hover:text-[#0071bc]">
                   {player.name}
                 </div>
-                
+
                 <div className="mt-auto flex flex-col gap-1">
-                  <div className="text-[0.7rem] uppercase text-[#888] tracking-wider font-semibold">FIDE ID</div>
-                  <div className="text-[0.85rem] text-[#333] mb-2">#{player.fideId}</div>
-                  
-                  <div className="text-[0.7rem] uppercase text-[#888] tracking-wider font-semibold">Country</div>
-                  <div className="text-[0.85rem] text-[#333] mb-2">{player.country}</div>
-                  
-                  <div className="text-[0.7rem] uppercase text-[#888] tracking-wider font-semibold">Title</div>
-                  <div className="text-[0.85rem] text-[#333] mb-2">{player.title || '—'}</div>
+                  <div className="text-[0.7rem] uppercase text-[#888] tracking-wider font-semibold">
+                    FIDE ID
+                  </div>
+                  <div className="text-[0.85rem] text-[#333] mb-2">
+                    #{player.fideId}
+                  </div>
+
+                  <div className="text-[0.7rem] uppercase text-[#888] tracking-wider font-semibold">
+                    Country
+                  </div>
+                  <div className="text-[0.85rem] text-[#333] mb-2">
+                    {player.country}
+                  </div>
+
+                  <div className="text-[0.7rem] uppercase text-[#888] tracking-wider font-semibold">
+                    Title
+                  </div>
+                  <div className="text-[0.85rem] text-[#333] mb-2">
+                    {player.title || "—"}
+                  </div>
                 </div>
               </Link>
             ))}
