@@ -10,6 +10,7 @@ const TOTAL_GAMES = 51319;
 const FIRST_PLAYERS = getAllPlayers().slice(0, 4);
 
 export default function Home() {
+  
   return (
     <main className="min-h-screen bg-[#f7f8fa]">
       {/* Top accent bar */}
