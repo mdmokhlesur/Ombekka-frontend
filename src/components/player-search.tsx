@@ -107,14 +107,18 @@ export default function PlayerSearch({ compact = false, placeholder }: PlayerSea
   };
 
   return (
-    <div ref={containerRef} className={`player-search-container ${compact ? 'player-search--compact' : ''}`}>
-      <form onSubmit={handleSubmit} className="player-search-form">
-        <div className="player-search-input-wrapper">
-          <Search className="player-search-icon" />
+    <div ref={containerRef} className="relative w-full">
+      <form onSubmit={handleSubmit} className="w-full">
+        <div className="relative flex items-center">
+          <Search className={`absolute text-[#999] pointer-events-none z-10 ${compact ? 'left-2.5 w-[15px] h-[15px]' : 'left-3.5 w-[18px] h-[18px]'}`} />
           <input
             ref={inputRef}
             type="text"
-            className={`player-search-input ${compact ? 'player-search-input--compact' : ''}`}
+            className={`w-full border border-[#d1d5db] rounded-md bg-white text-[#333] transition-all focus:border-[#0071bc] focus:ring-4 focus:ring-[#0071bc]/10 outline-none placeholder:text-[#aaa] ${
+              compact 
+                ? 'h-[38px] pl-9 pr-4 text-[0.82rem] placeholder:text-[0.8rem]' 
+                : 'h-[52px] pl-11 pr-4 text-[0.95rem] placeholder:text-[0.9rem]'
+            }`}
             placeholder={placeholder || 'Search by player name, FIDE ID, or country…'}
             value={query}
             onChange={handleInputChange}
@@ -131,32 +135,32 @@ export default function PlayerSearch({ compact = false, placeholder }: PlayerSea
       </form>
 
       {isOpen && results.length > 0 && (
-        <ul id={listboxId} className="player-search-dropdown" role="listbox">
+        <ul id={listboxId} className="absolute top-[calc(100%+4px)] inset-x-0 bg-white border border-[#e5e7eb] rounded-lg shadow-xl z-50 p-1 max-h-[380px] overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150 list-none" role="listbox">
           {results.map((player, index) => (
             <li
               key={player.fideId}
               role="option"
               aria-selected={index === highlightedIndex}
-              className={`player-search-option ${index === highlightedIndex ? 'player-search-option--highlighted' : ''}`}
+              className={`flex items-center justify-between p-2.5 rounded-md cursor-pointer gap-3 transition-colors group ${index === highlightedIndex ? 'bg-[#f0f6ff]' : ''}`}
               onMouseEnter={() => setHighlightedIndex(index)}
               onClick={() => navigateToPlayer(player.fideId)}
             >
-              <div className="player-search-option-left">
-                <div className="player-search-option-avatar">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors shrink-0 ${index === highlightedIndex ? 'bg-[#0071bc]/10 text-[#0071bc]' : 'bg-[#f4f6f8] text-[#999]'}`}>
                   <User className="w-4 h-4" />
                 </div>
-                <div className="player-search-option-info">
-                  <span className="player-search-option-name">{player.name}</span>
-                  <span className="player-search-option-meta">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[0.85rem] font-semibold text-[#1a1a1a] truncate">{player.name}</span>
+                  <span className="flex items-center gap-1 text-[0.7rem] text-[#999] mt-0.5">
                     <MapPin className="w-3 h-3" /> {player.country}
-                    <span className="player-search-option-divider">·</span>
+                    <span className="mx-0.5 text-[#ddd]">·</span>
                     <Trophy className="w-3 h-3" /> {player.title || 'N/A'}
                   </span>
                 </div>
               </div>
-              <div className="player-search-option-right">
-                <span className="player-search-option-id">#{player.fideId}</span>
-                <span className="player-search-option-games">{player.gamesCount} games</span>
+              <div className="flex flex-col items-end shrink-0">
+                <span className="text-[0.7rem] font-mono text-[#bbb]">#{player.fideId}</span>
+                <span className="text-[0.65rem] text-[#aaa] mt-0.5">{player.gamesCount} games</span>
               </div>
             </li>
           ))}
