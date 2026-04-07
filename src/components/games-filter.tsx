@@ -57,7 +57,7 @@ export function GamesFilter() {
     params.set("page", "1"); // Reset pagination
     
     startTransition(() => {
-      router.push(`/?${params.toString()}`);
+      router.push(`?${params.toString()}`);
     });
   };
 
@@ -84,7 +84,7 @@ export function GamesFilter() {
     params.set("page", "1");
 
     startTransition(() => {
-      router.push(`/?${params.toString()}`);
+      router.push(`?${params.toString()}`);
     });
   };
 

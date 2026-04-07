@@ -1,6 +1,7 @@
 import Link from "next/link";
 import PlayerSearch from "./player-search";
 import Image from "next/image";
+import { Suspense } from "react";
 
 export default function Navbar() {
   return (
@@ -22,7 +23,9 @@ export default function Navbar() {
           </span>
         </Link>
         <div className="w-full max-w-[320px]">
-          <PlayerSearch compact placeholder="Search..." />
+          <Suspense fallback={<div className="h-9 w-full bg-slate-100 animate-pulse rounded-md" />}>
+            <PlayerSearch compact placeholder="Search..." />
+          </Suspense>
         </div>
       </div>
     </div>

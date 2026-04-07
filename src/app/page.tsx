@@ -8,6 +8,7 @@ import {
 import { ArrowLeft, ChevronLeft, ChevronRight, View } from "lucide-react";
 import Link from "next/link";
 import { GamesFilter } from "@/components/games-filter";
+import { Suspense } from "react";
 
 export default async function ResultPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -48,7 +49,7 @@ export default async function ResultPage(props: {
     Object.entries(updated).forEach(([k, v]) => {
       p.set(k, String(v));
     });
-    return `/?${p.toString()}`;
+    return `?${p.toString()}`;
   };
 
   let games: GameData[] = [];
@@ -85,7 +86,9 @@ export default async function ResultPage(props: {
 
   return (
     <div className="max-w-[1200px] mx-auto px-2 sm:px-0 sm:py-6 print:p-0 print:max-w-full">
-      <GamesFilter />
+      <Suspense fallback={<div className="h-32 w-full bg-white border border-slate-200 rounded-lg animate-pulse mb-6" />}>
+        <GamesFilter />
+      </Suspense>
 
       {/* Simplified Games Table */}
       <div className="bg-white border border-[#e1e4e8] overflow-hidden mb-3 rounded-md">

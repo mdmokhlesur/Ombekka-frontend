@@ -68,7 +68,8 @@ export interface GamesApiResponse {
 const BACKEND_URL =
   typeof window !== "undefined"
     ? "/api/proxy"
-    : process.env.NEXT_PUBLIC_BACKEND_URL || "https://ombekka-backend.onrender.com/api";
+    : process.env.NEXT_PUBLIC_BACKEND_URL ||
+      "https://ombekka-backend.onrender.com/api";
 
 export interface GamesFilterParams {
   search?: string;
@@ -95,11 +96,11 @@ export async function fetchPlayerGames(
   signal?: AbortSignal,
 ): Promise<GamesApiResponse> {
   const { page = 1, limit = 10, ...restParams } = params;
-  
+
   const searchParams = new URLSearchParams();
   searchParams.set("page", page.toString());
   searchParams.set("limit", limit.toString());
-  
+
   Object.entries(restParams).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
       searchParams.set(key, value.toString());
@@ -107,8 +108,8 @@ export async function fetchPlayerGames(
   });
 
   const url = `${BACKEND_URL}/games?${searchParams.toString()}`;
-  console.log({ backendcallUrl: url });
-  
+  // console.log({ backendcallUrl: url });
+
   try {
     const res = await fetch(url, { cache: "no-store", signal });
 
@@ -118,11 +119,11 @@ export async function fetchPlayerGames(
 
     return res.json();
   } catch (error: unknown) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      console.log('Fetch aborted');
+    if (error instanceof Error && error.name === "AbortError") {
+      // console.log('Fetch aborted');
       throw error;
     }
-    console.error('Search failed', error);
+    console.error("Search failed", error);
     throw error;
   }
 }

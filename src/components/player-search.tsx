@@ -70,7 +70,7 @@ export default function PlayerSearch({
         const params = new URLSearchParams(searchParams.toString());
         params.set("search", debouncedQuery);
         params.set("page", "1");
-        router.push(`/?${params.toString()}`);
+        router.push(`?${params.toString()}`);
       } catch (err: unknown) {
         if (err instanceof Error && (err as Error).name === "AbortError") {
           // Silent for intentional cancels
@@ -91,40 +91,38 @@ export default function PlayerSearch({
 
   return (
     <div className="relative w-full">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger>
-          <div className="relative flex items-center group cursor-text">
-            <Search
-              className={`absolute text-[#999] pointer-events-none z-10 transition-colors duration-200 group-focus-within:text-[#0060A9] ${
-                compact
-                  ? "left-2.5 w-[15px] h-[15px]"
-                  : "left-3.5 w-[18px] h-[18px]"
-              }`}
-            />
-            <input
-              type="text"
-              className={`w-full border border-[#d1d5db] rounded-md bg-white text-[#333] transition-all focus:border-[#0071bc] focus:ring-4 focus:ring-[#0071bc]/10 outline-none placeholder:text-[#aaa] ${
-                compact
-                  ? "h-[38px] pl-9 pr-8 text-[0.82rem] placeholder:text-[0.8rem]"
-                  : "h-[52px] pl-11 pr-10 text-[0.95rem] placeholder:text-[0.9rem]"
-              }`}
-              placeholder={placeholder || "Search..."}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                if (e.target.value.trim()) setOpen(true);
-              }}
-              onFocus={() => {
-                if (query.trim()) setOpen(true);
-              }}
-              autoComplete="off"
-            />
-            {isSearching && (
-              <div className="absolute right-3">
-                <Loader2 className="w-4 h-4 text-[#0060A9] animate-spin" />
-              </div>
-            )}
-          </div>
+      <Popover open={open} onOpenChange={setOpen} modal={false}>
+        <PopoverTrigger className="relative w-full flex items-center group cursor-text">
+          <Search
+            className={`absolute text-[#999] pointer-events-none z-10 transition-colors duration-200 group-focus-within:text-[#0060A9] ${
+              compact
+                ? "left-2.5 w-[15px] h-[15px]"
+                : "left-3.5 w-[18px] h-[18px]"
+            }`}
+          />
+          <input
+            type="text"
+            className={`w-full border border-[#d1d5db] rounded-md bg-white text-[#333] transition-all focus:border-[#0071bc] focus:ring-4 focus:ring-[#0071bc]/10 outline-none placeholder:text-[#aaa] ${
+              compact
+                ? "h-[38px] pl-9 pr-8 text-[0.82rem] placeholder:text-[0.8rem]"
+                : "h-[52px] pl-11 pr-10 text-[0.95rem] placeholder:text-[0.9rem]"
+            }`}
+            placeholder={placeholder || "Search..."}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              if (e.target.value.trim()) setOpen(true);
+            }}
+            onFocus={() => {
+              if (query.trim()) setOpen(true);
+            }}
+            autoComplete="off"
+          />
+          {isSearching && (
+            <div className="absolute right-3">
+              <Loader2 className="w-4 h-4 text-[#0060A9] animate-spin" />
+            </div>
+          )}
         </PopoverTrigger>
         <PopoverContent
           className="w-(--radix-popover-trigger-width) p-0 border border-slate-200 rounded-md shadow-lg overflow-hidden mt-1 bg-white"
