@@ -1,13 +1,15 @@
 "use client";
+import toast from "react-hot-toast";
 
 export default function PdfButton() {
   const handleGeneratePdf = () => {
-    window.print();
+    // window.print();
+    //Toast.success?("PDF generated successfully");
   };
-
+  const notify = () => toast.success("PDF Functionality Coming Soon...");
   return (
     <button
-      onClick={handleGeneratePdf}
+      onClick={notify}
       className="cursor-pointer text-white bg-[#0060A9] hover:bg-[#004d88] px-5 py-2.5 rounded font-semibold text-sm flex items-center gap-2 border-none transition-colors"
     >
       <svg

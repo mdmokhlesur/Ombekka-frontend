@@ -12,6 +12,7 @@ import {
 } from "@/lib/api";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { Toaster } from "react-hot-toast";
 
 export default async function ResultPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -23,9 +24,7 @@ export default async function ResultPage(props: {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center bg-gray-50">
         <h1 className="text-2xl font-bold mb-4">No Search Query</h1>
-        <p className="text-gray-500 mb-8">
-          Please enter a search term.
-        </p>
+        <p className="text-gray-500 mb-8">Please enter a search term.</p>
         <Link href="/">
           <Button variant="outline">
             <ArrowLeft className="mr-2 w-4 h-4" /> Back to Search
@@ -120,7 +119,10 @@ export default async function ResultPage(props: {
   const ecoAgg = aggregateEco(games);
 
   // Opponent aggregation — from all games
-  const oppMap = new Map<string, { name: string; count: number; lastPlayed: string | null }>();
+  const oppMap = new Map<
+    string,
+    { name: string; count: number; lastPlayed: string | null }
+  >();
   for (const g of games) {
     const players = [g.white, g.black].filter(Boolean);
     for (const p of players) {
@@ -128,11 +130,18 @@ export default async function ResultPage(props: {
       const existing = oppMap.get(p.name);
       if (existing) {
         existing.count++;
-        if (g.datePlayed && (!existing.lastPlayed || g.datePlayed > existing.lastPlayed)) {
+        if (
+          g.datePlayed &&
+          (!existing.lastPlayed || g.datePlayed > existing.lastPlayed)
+        ) {
           existing.lastPlayed = g.datePlayed;
         }
       } else {
-        oppMap.set(p.name, { name: p.name, count: 1, lastPlayed: g.datePlayed });
+        oppMap.set(p.name, {
+          name: p.name,
+          count: 1,
+          lastPlayed: g.datePlayed,
+        });
       }
     }
   }
@@ -168,6 +177,7 @@ export default async function ResultPage(props: {
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </Link>
+          <Toaster />
           <PdfButton />
         </div>
 
@@ -260,23 +270,43 @@ export default async function ResultPage(props: {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">ECO</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">COUNT</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">LAST PLAYED</th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    ECO
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    COUNT
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    LAST PLAYED
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {ecoAgg.length > 0 ? ecoAgg.slice(0, 4).map((item) => (
-                  <TableRow key={item.eco} className="hover:bg-transparent border-none">
-                    <TableCell className="border-none py-3 px-4 text-[0.9rem] text-wrap">
-                      {item.eco} - {item.ecoName}
-                    </TableCell>
-                    <TableCell className="border-none py-3 px-4 text-[0.9rem]">{item.count}</TableCell>
-                    <TableCell className="border-none py-3 px-4 text-[0.9rem] text-gray-500">{item.lastPlayed || "N/A"}</TableCell>
-                  </TableRow>
-                )) : (
+                {ecoAgg.length > 0 ? (
+                  ecoAgg.slice(0, 4).map((item) => (
+                    <TableRow
+                      key={item.eco}
+                      className="hover:bg-transparent border-none"
+                    >
+                      <TableCell className="border-none py-3 px-4 text-[0.9rem] text-wrap">
+                        {item.eco} - {item.ecoName}
+                      </TableCell>
+                      <TableCell className="border-none py-3 px-4 text-[0.9rem]">
+                        {item.count}
+                      </TableCell>
+                      <TableCell className="border-none py-3 px-4 text-[0.9rem] text-gray-500">
+                        {item.lastPlayed || "N/A"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
                   <TableRow className="border-none">
-                    <TableCell colSpan={3} className="border-none py-4 px-4 text-center text-gray-400">No data</TableCell>
+                    <TableCell
+                      colSpan={3}
+                      className="border-none py-4 px-4 text-center text-gray-400"
+                    >
+                      No data
+                    </TableCell>
                   </TableRow>
                 )}
               </tbody>
@@ -291,21 +321,43 @@ export default async function ResultPage(props: {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">PLAYER</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">COUNT</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">LAST PLAYED</th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    PLAYER
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    COUNT
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    LAST PLAYED
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {oppAgg.length > 0 ? oppAgg.slice(0, 4).map((item) => (
-                  <TableRow key={item.name} className="hover:bg-transparent border-none">
-                    <TableCell className="border-none py-3 px-4 text-[0.9rem] text-wrap w-4/12">{item.name}</TableCell>
-                    <TableCell className="border-none py-3 px-4 text-[0.9rem]">{item.count}</TableCell>
-                    <TableCell className="border-none py-3 px-4 text-[0.9rem] text-gray-500">{item.lastPlayed || "N/A"}</TableCell>
-                  </TableRow>
-                )) : (
+                {oppAgg.length > 0 ? (
+                  oppAgg.slice(0, 4).map((item) => (
+                    <TableRow
+                      key={item.name}
+                      className="hover:bg-transparent border-none"
+                    >
+                      <TableCell className="border-none py-3 px-4 text-[0.9rem] text-wrap w-4/12">
+                        {item.name}
+                      </TableCell>
+                      <TableCell className="border-none py-3 px-4 text-[0.9rem]">
+                        {item.count}
+                      </TableCell>
+                      <TableCell className="border-none py-3 px-4 text-[0.9rem] text-gray-500">
+                        {item.lastPlayed || "N/A"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
                   <TableRow className="border-none">
-                    <TableCell colSpan={3} className="border-none py-4 px-4 text-center text-gray-400">No data</TableCell>
+                    <TableCell
+                      colSpan={3}
+                      className="border-none py-4 px-4 text-center text-gray-400"
+                    >
+                      No data
+                    </TableCell>
                   </TableRow>
                 )}
               </tbody>
@@ -320,21 +372,43 @@ export default async function ResultPage(props: {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">ENDGAME</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">COUNT</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">LAST PLAYED</th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    ENDGAME
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    COUNT
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    LAST PLAYED
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {endgameAgg.length > 0 ? endgameAgg.slice(0, 4).map((item) => (
-                  <TableRow key={item.name} className="hover:bg-transparent border-none">
-                    <TableCell className="border-none py-3 px-4 text-[0.9rem] text-wrap w-4/12">{item.name}</TableCell>
-                    <TableCell className="border-none py-3 px-4 text-[0.9rem]">{item.count}</TableCell>
-                    <TableCell className="border-none py-3 px-4 text-[0.9rem] text-gray-500">{item.lastPlayed || "N/A"}</TableCell>
-                  </TableRow>
-                )) : (
+                {endgameAgg.length > 0 ? (
+                  endgameAgg.slice(0, 4).map((item) => (
+                    <TableRow
+                      key={item.name}
+                      className="hover:bg-transparent border-none"
+                    >
+                      <TableCell className="border-none py-3 px-4 text-[0.9rem] text-wrap w-4/12">
+                        {item.name}
+                      </TableCell>
+                      <TableCell className="border-none py-3 px-4 text-[0.9rem]">
+                        {item.count}
+                      </TableCell>
+                      <TableCell className="border-none py-3 px-4 text-[0.9rem] text-gray-500">
+                        {item.lastPlayed || "N/A"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
                   <TableRow className="border-none">
-                    <TableCell colSpan={3} className="border-none py-4 px-4 text-center text-gray-400">No data</TableCell>
+                    <TableCell
+                      colSpan={3}
+                      className="border-none py-4 px-4 text-center text-gray-400"
+                    >
+                      No data
+                    </TableCell>
                   </TableRow>
                 )}
               </tbody>
@@ -351,21 +425,50 @@ export default async function ResultPage(props: {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">EVENT</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">DATE</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">WHITE</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">BLACK</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">RESULT</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">ECO</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">OPENING</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">PLY</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">TERMINATION</th>
-                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">ENDGAME</th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    EVENT
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    DATE
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    WHITE
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    BLACK
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    RESULT
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    ECO
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    OPENING
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    PLY
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    TERMINATION
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    ENDGAME
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    ECO TYPE
+                  </th>
+                  <th className="text-left px-4 py-3 text-[0.7rem] uppercase text-[#888] border-b border-[#eee] bg-[#fcfcfc]">
+                    GAME LENGTH
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {games.map((game) => (
-                  <TableRow key={game.id} className="hover:bg-[#fcfcfc] border-none">
+                  <TableRow
+                    key={game.id}
+                    className="hover:bg-[#fcfcfc] border-none"
+                  >
                     <TableCell className="border-none font-medium text-gray-700 py-4 px-4 text-[0.9rem]">
                       {game.tournament?.event || "—"}
                     </TableCell>
@@ -395,6 +498,14 @@ export default async function ResultPage(props: {
                     </TableCell>
                     <TableCell className="border-none text-gray-500 py-4 px-4 text-[0.9rem]">
                       {game.endgame || "—"}
+                    </TableCell>
+                    <TableCell className="border-none text-gray-500 py-4 px-4 text-[0.9rem]">
+                      {game.eco?.type || "—"}
+                    </TableCell>
+                    <TableCell className="border-none text-gray-500 py-4 px-4 text-[0.9rem]">
+                      {game.plyCount
+                        ? `${Math.ceil(game.plyCount / 2)} moves`
+                        : "—"}
                     </TableCell>
                   </TableRow>
                 ))}
