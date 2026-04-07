@@ -12,29 +12,68 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X, Loader2 } from "lucide-react";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
 
 const COUNTRIES = [
-  "USA", "IND", "RUS", "CHN", "GER", "UKR", "FRA", "POL", "HUN", "ESP", "ARM", "ISR",
+  "USA",
+  "IND",
+  "RUS",
+  "CHN",
+  "GER",
+  "UKR",
+  "FRA",
+  "POL",
+  "HUN",
+  "ESP",
+  "ARM",
+  "ISR",
 ];
 
 export function GamesFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [tournament, setTournament] = useState((searchParams.get("tournament") || "").replace(/^'|'$/g, ""));
-  const [minElo, setMinElo] = useState((searchParams.get("minElo") || "").replace(/^'|'$/g, ""));
-  const [maxElo, setMaxElo] = useState((searchParams.get("maxElo") || "").replace(/^'|'$/g, ""));
-  const [minPly, setMinPly] = useState((searchParams.get("minPly") || "").replace(/^'|'$/g, ""));
-  const [maxPly, setMaxPly] = useState((searchParams.get("maxPly") || "").replace(/^'|'$/g, ""));
-  const [country, setCountry] = useState((searchParams.get("country") || "all").replace(/^'|'$/g, ""));
-  const [title, setTitle] = useState((searchParams.get("title") || "").replace(/^'|'$/g, ""));
-  const [sortBy, setSortBy] = useState((searchParams.get("sortBy") || "datePlayed").replace(/^'|'$/g, ""));
+  const [tournament, setTournament] = useState(
+    (searchParams.get("tournament") || "").replace(/^'|'$/g, ""),
+  );
+  const [minElo, setMinElo] = useState(
+    (searchParams.get("minElo") || "").replace(/^'|'$/g, ""),
+  );
+  const [maxElo, setMaxElo] = useState(
+    (searchParams.get("maxElo") || "").replace(/^'|'$/g, ""),
+  );
+  const [minPly, setMinPly] = useState(
+    (searchParams.get("minPly") || "").replace(/^'|'$/g, ""),
+  );
+  const [maxPly, setMaxPly] = useState(
+    (searchParams.get("maxPly") || "").replace(/^'|'$/g, ""),
+  );
+  const [country, setCountry] = useState(
+    (searchParams.get("country") || "all").replace(/^'|'$/g, ""),
+  );
+  const [title, setTitle] = useState(
+    (searchParams.get("title") || "").replace(/^'|'$/g, ""),
+  );
+  const [sortBy, setSortBy] = useState(
+    (searchParams.get("sortBy") || "datePlayed").replace(/^'|'$/g, ""),
+  );
+
+  const [date, setDate] = useState<DateRange | undefined>(() => {
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
+    if (!from) return undefined;
+    return {
+      from: new Date(from),
+      to: to ? new Date(to) : undefined,
+    };
+  });
 
   const [isPending, startTransition] = useTransition();
 
   const applyFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
-    
+
     const updateParam = (key: string, value: string) => {
       if (value && value !== "all") params.set(key, value);
       else params.delete(key);
@@ -48,14 +87,26 @@ export function GamesFilter() {
     updateParam("country", country);
     updateParam("title", title.trim());
     updateParam("sortBy", sortBy);
-    
+
+    if (date?.from) {
+      params.set("from", date.from.toISOString());
+    } else {
+      params.delete("from");
+    }
+
+    if (date?.to) {
+      params.set("to", date.to.toISOString());
+    } else {
+      params.delete("to");
+    }
+
     // Default to desc for sortOrder if we're changing sort
     if (sortBy && !params.has("sortOrder")) {
       params.set("sortOrder", "desc");
     }
 
     params.set("page", "1"); // Reset pagination
-    
+
     startTransition(() => {
       router.push(`?${params.toString()}`);
     });
@@ -70,7 +121,8 @@ export function GamesFilter() {
     setCountry("all");
     setTitle("");
     setSortBy("datePlayed");
-    
+    setDate(undefined);
+
     const params = new URLSearchParams(searchParams.toString());
     params.delete("tournament");
     params.delete("minElo");
@@ -81,6 +133,8 @@ export function GamesFilter() {
     params.delete("title");
     params.delete("sortBy");
     params.delete("sortOrder");
+    params.delete("from");
+    params.delete("to");
     params.set("page", "1");
 
     startTransition(() => {
@@ -88,16 +142,24 @@ export function GamesFilter() {
     });
   };
 
-  const hasActiveFilters = 
-    tournament || minElo || maxElo || minPly || maxPly || (country !== "all") || title || (sortBy !== "datePlayed");
+  const hasActiveFilters =
+    tournament ||
+    minElo ||
+    maxElo ||
+    minPly ||
+    maxPly ||
+    country !== "all" ||
+    title ||
+    sortBy !== "datePlayed" ||
+    date?.from;
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-3 mb-6 shadow-sm flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
         {/* Tournament */}
         <div className="flex-1 min-w-[200px]">
-          <Input 
-            placeholder="Tournament (e.g. Candidates)" 
+          <Input
+            placeholder="Tournament (e.g. Candidates)"
             value={tournament}
             onChange={(e) => setTournament(e.target.value)}
             className="h-9 w-full"
@@ -106,8 +168,8 @@ export function GamesFilter() {
 
         {/* Title */}
         <div className="w-[120px]">
-          <Input 
-            placeholder="Title (GM, IM)" 
+          <Input
+            placeholder="Title (GM, IM)"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="h-9 w-full"
@@ -122,8 +184,10 @@ export function GamesFilter() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Any Country</SelectItem>
-              {COUNTRIES.map(c => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
+              {COUNTRIES.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -131,16 +195,16 @@ export function GamesFilter() {
 
         {/* Elo Range */}
         <div className="flex items-center gap-1 w-[200px]">
-          <Input 
-            placeholder="Min Elo" 
+          <Input
+            placeholder="Min Elo"
             type="number"
             value={minElo}
             onChange={(e) => setMinElo(e.target.value)}
             className="h-9 w-[90px]"
           />
           <span className="text-slate-400">-</span>
-          <Input 
-            placeholder="Max Elo" 
+          <Input
+            placeholder="Max Elo"
             type="number"
             value={maxElo}
             onChange={(e) => setMaxElo(e.target.value)}
@@ -150,22 +214,27 @@ export function GamesFilter() {
 
         {/* Ply Range */}
         <div className="flex items-center gap-1 w-[200px]">
-          <Input 
-            placeholder="Min Ply" 
+          <Input
+            placeholder="Min Ply"
             type="number"
             value={minPly}
             onChange={(e) => setMinPly(e.target.value)}
             className="h-9 w-[90px]"
           />
           <span className="text-slate-400">-</span>
-          <Input 
-            placeholder="Max Ply" 
+          <Input
+            placeholder="Max Ply"
             type="number"
             value={maxPly}
             onChange={(e) => setMaxPly(e.target.value)}
             className="h-9 w-[90px]"
           />
         </div>
+
+        {/* Date Range */}
+        {/* <div className="w-[300px]">
+          <DatePickerWithRange value={date} onChange={setDate} />
+        </div> */}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
@@ -184,14 +253,19 @@ export function GamesFilter() {
             </Select>
           </div>
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-slate-500 hover:text-red-600">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="h-9 text-slate-500 hover:text-red-600"
+            >
               <X className="w-4 h-4 mr-1" /> Clear
             </Button>
           )}
         </div>
 
-        <Button 
-          onClick={applyFilters} 
+        <Button
+          onClick={applyFilters}
           disabled={isPending}
           className="h-9 px-6 bg-[#0060A9] hover:bg-[#004b87]"
         >

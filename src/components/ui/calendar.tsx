@@ -41,21 +41,25 @@ function Calendar({
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
         ),
-        day_range_end: "day-range-end",
-        day_selected:
+        range_end: "day-range-end",
+        selected:
           "bg-[#0060A9] text-primary-foreground hover:bg-[#0060A9] hover:text-primary-foreground focus:bg-[#0060A9] focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
-        day_outside:
+        today: "bg-accent text-accent-foreground",
+        outside:
           "day-outside text-muted-foreground aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
-        day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle:
+        disabled: "text-muted-foreground opacity-50",
+        range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
-        day_hidden: "invisible",
+        hidden: "invisible",
         ...classNames,
       }}
       components={{
-        IconLeft: () => <ChevronLeft className="h-4 w-4" />,
-        IconRight: () => <ChevronRight className="h-4 w-4" />,
+        Chevron: ({ ...props }) => {
+          if (props.orientation === "left") {
+            return <ChevronLeft className="h-4 w-4" />
+          }
+          return <ChevronRight className="h-4 w-4" />
+        },
       }}
       {...props}
     />
