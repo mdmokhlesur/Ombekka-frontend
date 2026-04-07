@@ -14,11 +14,12 @@ export default async function ResultPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const searchParams = await props.searchParams;
-  
+
   // Extract all single-string params safely
   const extractParam = (key: string) => {
     const val = searchParams[key];
-    return Array.isArray(val) ? val[0] : val;
+    const raw = Array.isArray(val) ? val[0] : val;
+    return (raw || "").replace(/^'|'$/g, "");
   };
 
   const page = parseInt(extractParam("page") || "1", 10) || 1;
@@ -86,7 +87,11 @@ export default async function ResultPage(props: {
 
   return (
     <div className="max-w-[1200px] mx-auto px-2 sm:px-0 sm:py-6 print:p-0 print:max-w-full">
-      <Suspense fallback={<div className="h-32 w-full bg-white border border-slate-200 rounded-lg animate-pulse mb-6" />}>
+      <Suspense
+        fallback={
+          <div className="h-32 w-full bg-white border border-slate-200 rounded-lg animate-pulse mb-6" />
+        }
+      >
         <GamesFilter />
       </Suspense>
 
@@ -219,9 +224,7 @@ export default async function ResultPage(props: {
 
               <div className="flex items-center gap-1">
                 {hasPrevious ? (
-                  <Link
-                    href={buildUrl({ page: page - 1 })}
-                  >
+                  <Link href={buildUrl({ page: page - 1 })}>
                     <Button
                       variant="outline"
                       size="sm"
@@ -289,10 +292,7 @@ export default async function ResultPage(props: {
                         );
                       }
                       return (
-                        <Link
-                          key={`page-${p}`}
-                          href={buildUrl({ page: p })}
-                        >
+                        <Link key={`page-${p}`} href={buildUrl({ page: p })}>
                           <Button
                             variant={page === p ? "default" : "outline"}
                             size="icon"
@@ -307,9 +307,7 @@ export default async function ResultPage(props: {
                 </div>
 
                 {hasNext ? (
-                  <Link
-                    href={buildUrl({ page: page + 1 })}
-                  >
+                  <Link href={buildUrl({ page: page + 1 })}>
                     <Button
                       variant="outline"
                       size="sm"

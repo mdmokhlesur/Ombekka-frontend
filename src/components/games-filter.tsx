@@ -21,14 +21,14 @@ export function GamesFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [tournament, setTournament] = useState(searchParams.get("tournament") || "");
-  const [minElo, setMinElo] = useState(searchParams.get("minElo") || "");
-  const [maxElo, setMaxElo] = useState(searchParams.get("maxElo") || "");
-  const [minPly, setMinPly] = useState(searchParams.get("minPly") || "");
-  const [maxPly, setMaxPly] = useState(searchParams.get("maxPly") || "");
-  const [country, setCountry] = useState(searchParams.get("country") || "all");
-  const [title, setTitle] = useState(searchParams.get("title") || "");
-  const [sortBy, setSortBy] = useState(searchParams.get("sortBy") || "datePlayed");
+  const [tournament, setTournament] = useState((searchParams.get("tournament") || "").replace(/^'|'$/g, ""));
+  const [minElo, setMinElo] = useState((searchParams.get("minElo") || "").replace(/^'|'$/g, ""));
+  const [maxElo, setMaxElo] = useState((searchParams.get("maxElo") || "").replace(/^'|'$/g, ""));
+  const [minPly, setMinPly] = useState((searchParams.get("minPly") || "").replace(/^'|'$/g, ""));
+  const [maxPly, setMaxPly] = useState((searchParams.get("maxPly") || "").replace(/^'|'$/g, ""));
+  const [country, setCountry] = useState((searchParams.get("country") || "all").replace(/^'|'$/g, ""));
+  const [title, setTitle] = useState((searchParams.get("title") || "").replace(/^'|'$/g, ""));
+  const [sortBy, setSortBy] = useState((searchParams.get("sortBy") || "datePlayed").replace(/^'|'$/g, ""));
 
   const [isPending, startTransition] = useTransition();
 
