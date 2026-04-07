@@ -66,21 +66,79 @@ export interface GamesApiResponse {
 }
 
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://192.168.0.166:3030/api";
+  typeof window !== "undefined"
+    ? "/api/proxy"
+    : process.env.NEXT_PUBLIC_BACKEND_URL || "https://ombekka-backend.onrender.com/api";
+
+export interface GamesFilterParams {
+  search?: string;
+  tournament?: string;
+  minElo?: string | number;
+  maxElo?: string | number;
+  country?: string;
+  title?: string;
+  minPly?: string | number;
+  maxPly?: string | number;
+  sortBy?: string;
+  sortOrder?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  limit?: number;
+  player?: string;
+  eco?: string;
+  result?: string;
+}
 
 export async function fetchPlayerGames(
-  query: string = "",
-  page: number = 1,
-  limit: number = 10,
+  params: GamesFilterParams = {},
+  signal?: AbortSignal,
 ): Promise<GamesApiResponse> {
-  const url = `${BACKEND_URL}/games?search=${encodeURIComponent(query)}&page=${page}&limit=${limit}`;
+  const { page = 1, limit = 10, ...restParams } = params;
+  
+  const searchParams = new URLSearchParams();
+  searchParams.set("page", page.toString());
+  searchParams.set("limit", limit.toString());
+  
+  Object.entries(restParams).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.set(key, value.toString());
+    }
+  });
+
+  const url = `${BACKEND_URL}/games?${searchParams.toString()}`;
+  console.log({ backendcallUrl: url });
+  
+  try {
+    const res = await fetch(url, { cache: "no-store", signal });
+
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status} ${res.statusText}`);
+    }
+
+    return res.json();
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.log('Fetch aborted');
+      throw error;
+    }
+    console.error('Search failed', error);
+    throw error;
+  }
+}
+
+export async function fetchGameById(id: string) {
+  const url = `${BACKEND_URL}/games/${id}`;
   const res = await fetch(url, { cache: "no-store" });
 
   if (!res.ok) {
+    if (res.status === 404) return null;
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
 
-  return res.json();
+  const json = await res.json();
+  // Assume backend returns { success: true, data: GameData }
+  return json.data as GameData;
 }
 
 // Aggregation helpers
