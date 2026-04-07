@@ -94,13 +94,13 @@ export default function PlayerSearch({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger>
           <div className="relative flex items-center group cursor-text">
-            <Search
+            {/* <Search
               className={`absolute text-[#999] pointer-events-none z-10 transition-colors duration-200 group-focus-within:text-[#0060A9] ${
                 compact
                   ? "left-2.5 w-[15px] h-[15px]"
                   : "left-3.5 w-[18px] h-[18px]"
               }`}
-            />
+            /> */}
             <input
               type="text"
               className={`w-full border border-[#d1d5db] rounded-md bg-white text-[#333] transition-all focus:border-[#0071bc] focus:ring-4 focus:ring-[#0071bc]/10 outline-none placeholder:text-[#aaa] ${
