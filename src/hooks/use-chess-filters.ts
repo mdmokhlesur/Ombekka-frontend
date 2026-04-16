@@ -45,18 +45,21 @@ export function useChessFilters() {
     (key: keyof GamesFilterParams, value: string | number | null | undefined) => {
       const params = new URLSearchParams(searchParams.toString());
       
-      if (value === undefined || value === null || value === "" || value === "all") {
+      const isEmpty = value === undefined || value === null || value === "" || value === "all" || value === "undefined";
+      
+      if (isEmpty) {
         params.delete(key);
       } else {
         params.set(key, String(value));
       }
 
-      // Always reset page to 1 when changing filters (except when page itself is changed)
+      // Always reset page to 1 when changing filters
       if (key !== "page") {
         params.set("page", "1");
       }
 
-      router.push(`?${params.toString()}`);
+      // Use replace for filter changes to avoid history pollution
+      router.replace(`?${params.toString()}`);
     },
     [router, searchParams],
   );
@@ -66,7 +69,8 @@ export function useChessFilters() {
       const params = new URLSearchParams(searchParams.toString());
       
       Object.entries(updates).forEach(([key, value]) => {
-        if (value === undefined || value === null || value === "" || value === "all") {
+        const isEmpty = value === undefined || value === null || value === "" || value === "all" || value === "undefined";
+        if (isEmpty) {
           params.delete(key);
         } else {
           params.set(key, String(value));
@@ -78,7 +82,7 @@ export function useChessFilters() {
         params.set("page", "1");
       }
 
-      router.push(`?${params.toString()}`);
+      router.replace(`?${params.toString()}`);
     },
     [router, searchParams],
   );

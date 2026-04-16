@@ -7,6 +7,7 @@ import {
   type GamesApiResponse,
 } from "@/lib/api";
 import { useDebounce } from "./use-debounce";
+import { DataCache } from "@/lib/cache";
 
 /**
  * useGames Hook
@@ -16,8 +17,14 @@ import { useDebounce } from "./use-debounce";
  * 3. Centralized loading and error states
  */
 export function useGames(params: GamesFilterParams) {
-  const [data, setData] = useState<GamesApiResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Generate a stable key for the current filter state
+  const cacheKey = JSON.stringify(params);
+  
+  // Use a lazy initializer for state to check cache immediately
+  const [data, setData] = useState<GamesApiResponse | null>(() => {
+    return DataCache.get(cacheKey);
+  });
+  const [isLoading, setIsLoading] = useState(!data);
   const [error, setError] = useState<string | null>(null);
 
   // Debounce expensive inputs
@@ -30,7 +37,16 @@ export function useGames(params: GamesFilterParams) {
     const signal = controller.signal;
 
     const loadGames = async () => {
-      setIsLoading(true);
+      // If we already have cached data for these parameters, 
+      // we do a "silent refresh" (background revalidation)
+      const cached = DataCache.get(cacheKey);
+      if (cached) {
+        setData(cached);
+        setIsLoading(false);
+      } else {
+        setIsLoading(true);
+      }
+
       setError(null);
 
       try {
@@ -46,6 +62,8 @@ export function useGames(params: GamesFilterParams) {
 
         if (response.success) {
           setData(response);
+          // Memorize this result for 1 hour
+          DataCache.set(cacheKey, response);
         } else {
           setError(response.message || "Failed to fetch games");
         }
@@ -70,6 +88,7 @@ export function useGames(params: GamesFilterParams) {
     debouncedSearch,
     debouncedPlayer,
     debouncedTournament,
+    cacheKey, // Re-run when any parameter changes
     params.eco,
     params.result,
     params.minElo,

@@ -33,7 +33,12 @@ export function ChartsSection({ games, isLoading, onFilterChange }: ChartsSectio
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
-    setHasMounted(true);
+    // We wait for two frames to ensure Next.js hydration AND 
+    // browser initial layout are 100% complete
+    const handle = requestAnimationFrame(() => {
+       requestAnimationFrame(() => setHasMounted(true));
+    });
+    return () => cancelAnimationFrame(handle);
   }, []);
 
   const resultData = aggregateResults(games).filter(d => d.value > 0);
@@ -78,8 +83,10 @@ export function ChartsSection({ games, isLoading, onFilterChange }: ChartsSectio
                   animationDuration={1000}
                   stroke="none"
                   onClick={(data) => {
-                     const resultValue = RESULT_MAP[data.name];
-                     if (resultValue) onFilterChange("result", resultValue);
+                     if (data && data.name) {
+                        const resultValue = RESULT_MAP[data.name];
+                        if (resultValue) onFilterChange("result", resultValue);
+                     }
                   }}
                   className="cursor-pointer"
                 >
@@ -105,7 +112,10 @@ export function ChartsSection({ games, isLoading, onFilterChange }: ChartsSectio
                 <div 
                   key={d.name} 
                   className="flex items-center gap-1.5 cursor-pointer hover:text-slate-900 transition-colors"
-                  onClick={() => onFilterChange("result", RESULT_MAP[d.name])}
+                  onClick={() => {
+                    const val = RESULT_MAP[d.name];
+                    if (val) onFilterChange("result", val);
+                  }}
                 >
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i] }} />
                   {d.name}
@@ -175,7 +185,7 @@ export function ChartsSection({ games, isLoading, onFilterChange }: ChartsSectio
                 data={ecoData} 
                 layout="vertical" 
                 margin={{ left: 10, right: 30, top: 10, bottom: 10 }}
-                onClick={(data) => {
+                onClick={(data: any) => {
                    if (data && data.activePayload && data.activePayload[0]) {
                       onFilterChange("eco", data.activePayload[0].payload.eco);
                    }

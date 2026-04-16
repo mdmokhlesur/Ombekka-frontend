@@ -241,7 +241,7 @@ export default async function GamePage({ params }: GamePageProps) {
 
           {/* Opening Theory Sidecard */}
           <div className="space-y-6">
-            <Card className="border-none shadow-sm bg-indigo-900 text-white">
+            <Card className="border-none shadow-sm bg-indigo-100 text-black">
               <CardHeader>
                 <CardTitle className="text-xs font-bold uppercase tracking-widest opacity-60">
                   Opening Theory
@@ -256,8 +256,8 @@ export default async function GamePage({ params }: GamePageProps) {
                     {game.eco?.name}
                   </p>
                 </div>
-                <div className="p-4 bg-indigo-800/50 rounded-xl border border-indigo-700/50">
-                  <p className="text-[11px] font-bold text-indigo-300 uppercase mb-2">
+                <div className="p-4 bg-indigo-200 rounded-xl border border-indigo-700/50">
+                  <p className="text-[11px] font-bold text-indigo-900 uppercase mb-2">
                     Defining Moves
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -266,7 +266,7 @@ export default async function GamePage({ params }: GamePageProps) {
                       .map((move: string, i: number) => (
                         <span
                           key={i}
-                          className="inline-block px-2 py-0.5 bg-indigo-900/50 rounded text-xs font-mono text-indigo-50/90 border border-indigo-600/30"
+                          className="inline-block px-2 py-0.5 bg-indigo-900/50 rounded text-xs font-mono text-indigo-900 border border-indigo-600/30"
                         >
                           {move}
                         </span>

@@ -16,11 +16,24 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
 import { useDebounce } from "@/hooks/use-debounce";
 
-const COUNTRIES = ["USA", "IND", "RUS", "CHN", "GER", "UKR", "FRA", "POL", "HUN", "ESP", "ARM", "BEL"];
+const COUNTRIES = [
+  "USA",
+  "IND",
+  "RUS",
+  "CHN",
+  "GER",
+  "UKR",
+  "FRA",
+  "POL",
+  "HUN",
+  "ESP",
+  "ARM",
+  "BEL",
+];
 
 export function GamesFilter() {
   const { filters, setFilter, setFilters, clearFilters } = useChessFilters();
-  
+
   // Local state for text inputs to handle debounced URL updates
   const [search, setSearch] = useState(filters.search || "");
   const [player, setPlayer] = useState(filters.player || "");
@@ -30,24 +43,45 @@ export function GamesFilter() {
   const debouncedPlayer = useDebounce(player, 500);
   const debouncedTournament = useDebounce(tournament, 500);
 
-  // Sync debounced values to URL
+  // Tracks whether the text change originated from the user typing
+  const isDirty = React.useRef({ search: false, player: false, tournament: false });
+
+  // Sync debounced values to URL ONLY if they were changed locally by typing
   useEffect(() => {
-    if (debouncedSearch !== (filters.search || "")) setFilter("search", debouncedSearch);
-  }, [debouncedSearch, filters.search, setFilter]);
+    if (isDirty.current.search && debouncedSearch !== (filters.search || "")) {
+      setFilter("search", debouncedSearch);
+      isDirty.current.search = false;
+    }
+  }, [debouncedSearch, setFilter, filters.search]);
 
   useEffect(() => {
-    if (debouncedPlayer !== (filters.player || "")) setFilter("player", debouncedPlayer);
-  }, [debouncedPlayer, filters.player, setFilter]);
+    if (isDirty.current.player && debouncedPlayer !== (filters.player || "")) {
+      setFilter("player", debouncedPlayer);
+      isDirty.current.player = false;
+    }
+  }, [debouncedPlayer, setFilter, filters.player]);
 
   useEffect(() => {
-    if (debouncedTournament !== (filters.tournament || "")) setFilter("tournament", debouncedTournament);
-  }, [debouncedTournament, filters.tournament, setFilter]);
+    if (isDirty.current.tournament && debouncedTournament !== (filters.tournament || "")) {
+      setFilter("tournament", debouncedTournament);
+      isDirty.current.tournament = false;
+    }
+  }, [debouncedTournament, setFilter, filters.tournament]);
 
-  // Sync local state when filters change externally (e.g. clear all)
+  // Sync local state when filters change externally (e.g. from table pivots)
   useEffect(() => {
-    setSearch(filters.search || "");
-    setPlayer(filters.player || "");
-    setTournament(filters.tournament || "");
+    if (filters.search !== search) {
+      setSearch(filters.search || "");
+      isDirty.current.search = false; // Mark as clean so it doesn't trigger a loop
+    }
+    if (filters.player !== player) {
+      setPlayer(filters.player || "");
+      isDirty.current.player = false;
+    }
+    if (filters.tournament !== tournament) {
+      setTournament(filters.tournament || "");
+      isDirty.current.tournament = false;
+    }
   }, [filters.search, filters.player, filters.tournament]);
 
   const [date, setDate] = useState<DateRange | undefined>(() => {
@@ -66,7 +100,10 @@ export function GamesFilter() {
     });
   };
 
-  const hasActiveFilters = Object.values(filters).some(v => v !== undefined && v !== "" && v !== 1 && v !== 10 && v !== "datePlayed");
+  const hasActiveFilters = Object.values(filters).some(
+    (v) =>
+      v !== undefined && v !== "" && v !== 1 && v !== 10 && v !== "datePlayed",
+  );
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
@@ -79,38 +116,56 @@ export function GamesFilter() {
           <Input
             placeholder="Search name, event, opening..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              isDirty.current.search = true;
+              setSearch(e.target.value);
+            }}
             className="h-9 text-sm border-slate-200 focus:ring-blue-500"
           />
         </div>
 
         {/* Player Research */}
         <div className="space-y-2">
-          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Opponent Player</label>
+          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">
+            Opponent Player
+          </label>
           <Input
             placeholder="e.g. Carlsen, Magnus"
             value={player}
-            onChange={(e) => setPlayer(e.target.value)}
+            onChange={(e) => {
+              isDirty.current.player = true;
+              setPlayer(e.target.value);
+            }}
             className="h-9 text-sm"
           />
         </div>
 
         {/* Tournament */}
         <div className="space-y-2">
-          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Tournament</label>
+          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">
+            Tournament
+          </label>
           <Input
             placeholder="e.g. World Championship"
             value={tournament}
-            onChange={(e) => setTournament(e.target.value)}
+            onChange={(e) => {
+              isDirty.current.tournament = true;
+              setTournament(e.target.value);
+            }}
             className="h-9 text-sm"
           />
         </div>
 
         {/* Result Filter */}
         <div className="space-y-2">
-          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Game Result</label>
-          <Select value={filters.result || "all"} onValueChange={(v) => setFilter("result", v)}>
-            <SelectTrigger className="h-9 text-sm">
+          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">
+            Game Result
+          </label>
+          <Select
+            value={filters.result || "all"}
+            onValueChange={(v) => setFilter("result", v)}
+          >
+            <SelectTrigger className="h-9 text-sm w-full">
               <SelectValue placeholder="Any Result" />
             </SelectTrigger>
             <SelectContent>
@@ -124,29 +179,43 @@ export function GamesFilter() {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Country</label>
-            <Select value={filters.country || "all"} onValueChange={(v) => setFilter("country", v)}>
-              <SelectTrigger className="h-9 text-sm">
+            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">
+              Country
+            </label>
+            <Select
+              value={filters.country || "all"}
+              onValueChange={(v) => setFilter("country", v)}
+            >
+              <SelectTrigger className="h-9 text-sm w-full">
                 <SelectValue placeholder="Any" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Any</SelectItem>
                 {COUNTRIES.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Title</label>
-            <Select value={filters.title || "all"} onValueChange={(v) => setFilter("title", v)}>
-              <SelectTrigger className="h-9 text-sm">
+            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">
+              Title
+            </label>
+            <Select
+              value={filters.title || "all"}
+              onValueChange={(v) => setFilter("title", v)}
+            >
+              <SelectTrigger className="h-9 text-sm w-full">
                 <SelectValue placeholder="Any" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Any</SelectItem>
                 {["GM", "IM", "FM", "WGM", "WIM"].map((t) => (
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -156,7 +225,9 @@ export function GamesFilter() {
         {/* Ranges */}
         <div className="space-y-4 pt-1">
           <div className="space-y-2">
-            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Elo Range</label>
+            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">
+              Elo Range
+            </label>
             <div className="flex items-center gap-2">
               <Input
                 type="number"
@@ -175,9 +246,11 @@ export function GamesFilter() {
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
-            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Ply Count</label>
+            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">
+              Ply Count
+            </label>
             <div className="flex items-center gap-2">
               <Input
                 type="number"
@@ -200,7 +273,9 @@ export function GamesFilter() {
 
         {/* Date Range */}
         <div className="space-y-2">
-          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Date Range</label>
+          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">
+            Date Range
+          </label>
           <DatePickerWithRange value={date} onChange={handleDateChange} />
         </div>
 
@@ -209,8 +284,11 @@ export function GamesFilter() {
           <label className="text-[11px] font-bold uppercase text-slate-400 px-1 flex items-center gap-1.5">
             <Filter className="w-3 h-3" /> Sort Order
           </label>
-          <Select value={filters.sortBy || "datePlayed"} onValueChange={(v) => setFilter("sortBy", v)}>
-            <SelectTrigger className="h-9 text-sm border-none bg-slate-50">
+          <Select
+            value={filters.sortBy || "datePlayed"}
+            onValueChange={(v) => setFilter("sortBy", v)}
+          >
+            <SelectTrigger className="h-9 text-sm border-none bg-slate-50 w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

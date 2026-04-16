@@ -1,18 +1,14 @@
-import { Suspense } from "react";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { Loader2 } from "lucide-react";
+import { Suspense } from "react";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#f8fafc]">
-      <Suspense
-        fallback={
-          <div className="flex h-screen w-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-            <span className="ml-3 text-slate-500 font-medium">Loading Dashboard...</span>
-          </div>
-        }
-      >
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-pulse text-slate-400 font-medium">Initializing Research...</div>
+        </div>
+      }>
         <DashboardShell />
       </Suspense>
     </main>
