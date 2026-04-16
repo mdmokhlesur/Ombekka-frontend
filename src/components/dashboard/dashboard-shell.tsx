@@ -1,17 +1,20 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useChessFilters } from "@/hooks/use-chess-filters";
 import { useGames } from "@/hooks/use-games";
-import { StatsGrid } from "./stats-grid";
-import { GamesTable } from "./games-table";
-import { ChartsSection } from "./charts-section";
+import { cn } from "@/lib/utils";
+import { Filter, RefreshCw } from "lucide-react";
+import { useState } from "react";
 import { GamesFilter } from "../games-filter";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChartsSection } from "./charts-section";
+import { GamesTable } from "./games-table";
+import { StatsGrid } from "./stats-grid";
 
 export function DashboardShell() {
   const { filters, setFilter, clearFilters } = useChessFilters();
   const { games, pagination, isLoading, error } = useGames(filters);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const hasActiveFilters = Object.values(filters).some(v => v !== undefined && v !== "" && v !== 1 && v !== 10 && v !== "datePlayed");
 
@@ -36,30 +39,43 @@ export function DashboardShell() {
           )}
         </div>
         
-        {isLoading && (
-          <div className="flex items-center gap-2 text-slate-400 text-sm font-medium bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-            Updating analysis...
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Mobile Filter Toggle */}
+          <Button 
+            variant="outline"
+            className="lg:hidden flex items-center gap-2 text-xs font-bold"
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+          >
+            <Filter className="w-3.5 h-3.5" />
+            {showMobileFilters ? "Hide Filters" : "Filter Research"}
+          </Button>
+
+          {isLoading && (
+            <div className="flex items-center gap-2 text-slate-400 text-sm font-medium bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              Updating analysis...
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Error State */}
       {error && (
-        <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-start gap-3 text-rose-800">
-          <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="font-semibold text-sm">Failed to fetch research data</p>
-            <p className="text-xs opacity-80">{error}</p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => window.location.reload()} 
-              className="mt-3 bg-white text-rose-700 border-rose-200 hover:bg-rose-50"
-            >
-              Retry
-            </Button>
+        <div className="mb-6 mx-auto max-w-2xl p-6 bg-white border border-slate-200 shadow-sm rounded-2xl flex flex-col items-center text-center gap-4 animate-in zoom-in-95 duration-300">
+          <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center">
+            <RefreshCw className="w-6 h-6" />
           </div>
+          <div>
+            <h3 className="font-bold text-slate-900">Something went wrong</h3>
+            <p className="text-sm text-slate-500 mt-1">We couldn&apos;t load your research data. Please reload the page.</p>
+          </div>
+          <Button 
+            variant="default" 
+            onClick={() => window.location.reload()} 
+            className="bg-slate-900 hover:bg-slate-800 text-white px-8"
+          >
+            Reload Analysis
+          </Button>
         </div>
       )}
 
@@ -68,12 +84,20 @@ export function DashboardShell() {
         games={games} 
         totalGames={pagination?.total || 0} 
         isLoading={isLoading} 
+        onFilterChange={(key, value) => {
+           if (key === 'clear') clearFilters();
+           else setFilter(key as any, value);
+        }}
       />
 
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Sidebar Filters */}
-        <aside className="lg:col-span-3 space-y-6">
+        <aside className={cn(
+          "lg:col-span-3 space-y-6",
+          !showMobileFilters && "hidden lg:block",
+          showMobileFilters && "block animate-in slide-in-from-top-4 duration-300"
+        )}>
           <div className="sticky top-6">
             <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 px-1">Research Filters</h2>
             <GamesFilter />
@@ -81,7 +105,7 @@ export function DashboardShell() {
             <div className="mt-6 p-4 bg-blue-50/50 rounded-xl border border-blue-100 text-blue-900/70">
               <h4 className="text-xs font-bold uppercase mb-2">Pro Tip</h4>
               <p className="text-[11px] leading-relaxed">
-                Filter by <strong>ELO</strong> and <strong>ECO</strong> to identify an opponent's specific opening weaknesses across different time controls.
+                Filter by <strong>ELO</strong> and <strong>ECO</strong> to identify an opponent&apos;s specific opening weaknesses across different time controls.
               </p>
             </div>
           </div>
@@ -90,7 +114,14 @@ export function DashboardShell() {
         {/* Content Area */}
         <div className="lg:col-span-9 space-y-8">
           {/* Visualizations Section */}
-          <ChartsSection games={games} isLoading={isLoading} />
+          <ChartsSection 
+            games={games} 
+            isLoading={isLoading} 
+            onFilterChange={(key, value) => {
+               if (key === 'clear') clearFilters();
+               else setFilter(key as any, value);
+            }} 
+          />
 
           <div className="space-y-4">
              <div className="flex items-center justify-between px-1">
@@ -101,7 +132,10 @@ export function DashboardShell() {
                 games={games} 
                 pagination={pagination} 
                 onPageChange={(page) => setFilter('page', page)}
-                onFilterChange={(key, value) => setFilter(key, value)}
+                onFilterChange={(key, value) => {
+                  if (key === 'clear') clearFilters();
+                  else setFilter(key as any, value);
+                }}
                 isLoading={isLoading} 
              />
           </div>

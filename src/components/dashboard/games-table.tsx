@@ -3,9 +3,10 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { type GameData, type PaginationInfo } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface GamesTableProps {
   games: GameData[];
@@ -55,8 +56,25 @@ export function GamesTable({ games, pagination, onPageChange, onFilterChange, is
           <TableBody>
             {games.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-slate-500">
-                  No games found matching your filters.
+                <TableCell colSpan={6} className="h-[400px] text-center">
+                  <div className="flex flex-col items-center justify-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
+                      <Search className="w-8 h-8 text-slate-300" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-lg font-bold text-slate-900">No matches found</p>
+                      <p className="text-sm text-slate-500 max-w-[280px] mx-auto">
+                        Your current research filters are too specific. Try adjusting them to broaden your search.
+                      </p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => onFilterChange("clear", true)}
+                      className="mt-2 text-xs font-bold uppercase tracking-wider h-9 px-6 hover:bg-slate-50 transition-all rounded-full"
+                    >
+                      Reset All Filters
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
@@ -114,9 +132,11 @@ export function GamesTable({ games, pagination, onPageChange, onFilterChange, is
                     </p>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600">
-                      <Eye className="w-4 h-4" />
-                    </Button>
+                    <Link href={`/game/${game.id}`}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </Link>
                   </TableCell>
                 </TableRow>
               ))
