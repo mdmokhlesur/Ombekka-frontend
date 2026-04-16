@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useChessFilters } from "@/hooks/use-chess-filters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,268 +11,227 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, Loader2 } from "lucide-react";
+import { X, Search, Filter } from "lucide-react";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
+import { useDebounce } from "@/hooks/use-debounce";
 
-const COUNTRIES = [
-  "USA",
-  "IND",
-  "RUS",
-  "CHN",
-  "GER",
-  "UKR",
-  "FRA",
-  "POL",
-  "HUN",
-  "ESP",
-  "ARM",
-  "ISR",
-];
+const COUNTRIES = ["USA", "IND", "RUS", "CHN", "GER", "UKR", "FRA", "POL", "HUN", "ESP", "ARM", "BEL"];
 
 export function GamesFilter() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { filters, setFilter, setFilters, clearFilters } = useChessFilters();
+  
+  // Local state for text inputs to handle debounced URL updates
+  const [search, setSearch] = useState(filters.search || "");
+  const [player, setPlayer] = useState(filters.player || "");
+  const [tournament, setTournament] = useState(filters.tournament || "");
 
-  const [tournament, setTournament] = useState(
-    (searchParams.get("tournament") || "").replace(/^'|'$/g, ""),
-  );
-  const [minElo, setMinElo] = useState(
-    (searchParams.get("minElo") || "").replace(/^'|'$/g, ""),
-  );
-  const [maxElo, setMaxElo] = useState(
-    (searchParams.get("maxElo") || "").replace(/^'|'$/g, ""),
-  );
-  const [minPly, setMinPly] = useState(
-    (searchParams.get("minPly") || "").replace(/^'|'$/g, ""),
-  );
-  const [maxPly, setMaxPly] = useState(
-    (searchParams.get("maxPly") || "").replace(/^'|'$/g, ""),
-  );
-  const [country, setCountry] = useState(
-    (searchParams.get("country") || "all").replace(/^'|'$/g, ""),
-  );
-  const [title, setTitle] = useState(
-    (searchParams.get("title") || "").replace(/^'|'$/g, ""),
-  );
-  const [sortBy, setSortBy] = useState(
-    (searchParams.get("sortBy") || "datePlayed").replace(/^'|'$/g, ""),
-  );
+  const debouncedSearch = useDebounce(search, 500);
+  const debouncedPlayer = useDebounce(player, 500);
+  const debouncedTournament = useDebounce(tournament, 500);
+
+  // Sync debounced values to URL
+  useEffect(() => {
+    if (debouncedSearch !== (filters.search || "")) setFilter("search", debouncedSearch);
+  }, [debouncedSearch, filters.search, setFilter]);
+
+  useEffect(() => {
+    if (debouncedPlayer !== (filters.player || "")) setFilter("player", debouncedPlayer);
+  }, [debouncedPlayer, filters.player, setFilter]);
+
+  useEffect(() => {
+    if (debouncedTournament !== (filters.tournament || "")) setFilter("tournament", debouncedTournament);
+  }, [debouncedTournament, filters.tournament, setFilter]);
+
+  // Sync local state when filters change externally (e.g. clear all)
+  useEffect(() => {
+    setSearch(filters.search || "");
+    setPlayer(filters.player || "");
+    setTournament(filters.tournament || "");
+  }, [filters.search, filters.player, filters.tournament]);
 
   const [date, setDate] = useState<DateRange | undefined>(() => {
-    const from = searchParams.get("from");
-    const to = searchParams.get("to");
-    if (!from) return undefined;
+    if (!filters.from) return undefined;
     return {
-      from: new Date(from),
-      to: to ? new Date(to) : undefined,
+      from: new Date(filters.from),
+      to: filters.to ? new Date(filters.to) : undefined,
     };
   });
 
-  const [isPending, startTransition] = useTransition();
-
-  const applyFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    const updateParam = (key: string, value: string) => {
-      if (value && value !== "all") params.set(key, value);
-      else params.delete(key);
-    };
-
-    updateParam("tournament", tournament.trim());
-    updateParam("minElo", minElo.trim());
-    updateParam("maxElo", maxElo.trim());
-    updateParam("minPly", minPly.trim());
-    updateParam("maxPly", maxPly.trim());
-    updateParam("country", country);
-    updateParam("title", title.trim());
-    updateParam("sortBy", sortBy);
-
-    if (date?.from) {
-      params.set("from", date.from.toISOString());
-    } else {
-      params.delete("from");
-    }
-
-    if (date?.to) {
-      params.set("to", date.to.toISOString());
-    } else {
-      params.delete("to");
-    }
-
-    // Default to desc for sortOrder if we're changing sort
-    if (sortBy && !params.has("sortOrder")) {
-      params.set("sortOrder", "desc");
-    }
-
-    params.set("page", "1"); // Reset pagination
-
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
+  const handleDateChange = (newRange: DateRange | undefined) => {
+    setDate(newRange);
+    setFilters({
+      from: newRange?.from?.toISOString(),
+      to: newRange?.to?.toISOString(),
     });
   };
 
-  const clearFilters = () => {
-    setTournament("");
-    setMinElo("");
-    setMaxElo("");
-    setMinPly("");
-    setMaxPly("");
-    setCountry("all");
-    setTitle("");
-    setSortBy("datePlayed");
-    setDate(undefined);
-
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("tournament");
-    params.delete("minElo");
-    params.delete("maxElo");
-    params.delete("minPly");
-    params.delete("maxPly");
-    params.delete("country");
-    params.delete("title");
-    params.delete("sortBy");
-    params.delete("sortOrder");
-    params.delete("from");
-    params.delete("to");
-    params.set("page", "1");
-
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
-    });
-  };
-
-  const hasActiveFilters =
-    tournament ||
-    minElo ||
-    maxElo ||
-    minPly ||
-    maxPly ||
-    country !== "all" ||
-    title ||
-    sortBy !== "datePlayed" ||
-    date?.from;
+  const hasActiveFilters = Object.values(filters).some(v => v !== undefined && v !== "" && v !== 1 && v !== 10 && v !== "datePlayed");
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-3 mb-6 shadow-sm flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Tournament */}
-        <div className="flex-1 min-w-[200px]">
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
+      <div className="p-4 space-y-5">
+        {/* Global Search */}
+        <div className="space-y-2">
+          <label className="text-[11px] font-bold uppercase text-slate-400 px-1 flex items-center gap-1.5">
+            <Search className="w-3 h-3" /> Search Games
+          </label>
           <Input
-            placeholder="Tournament (e.g. Candidates)"
+            placeholder="Search name, event, opening..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9 text-sm border-slate-200 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Player Research */}
+        <div className="space-y-2">
+          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Opponent Player</label>
+          <Input
+            placeholder="e.g. Carlsen, Magnus"
+            value={player}
+            onChange={(e) => setPlayer(e.target.value)}
+            className="h-9 text-sm"
+          />
+        </div>
+
+        {/* Tournament */}
+        <div className="space-y-2">
+          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Tournament</label>
+          <Input
+            placeholder="e.g. World Championship"
             value={tournament}
             onChange={(e) => setTournament(e.target.value)}
-            className="h-9 w-full"
+            className="h-9 text-sm"
           />
         </div>
 
-        {/* Title */}
-        <div className="w-[120px]">
-          <Input
-            placeholder="Title (GM, IM)"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="h-9 w-full"
-          />
-        </div>
-
-        {/* Country */}
-        <div className="w-[140px]">
-          <Select value={country} onValueChange={(v) => v && setCountry(v)}>
-            <SelectTrigger className="h-9 w-full">
-              <SelectValue placeholder="Country" />
+        {/* Result Filter */}
+        <div className="space-y-2">
+          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Game Result</label>
+          <Select value={filters.result || "all"} onValueChange={(v) => setFilter("result", v)}>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Any Result" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Any Country</SelectItem>
-              {COUNTRIES.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
+              <SelectItem value="all">Any Result</SelectItem>
+              <SelectItem value="1-0">1-0 (White Win)</SelectItem>
+              <SelectItem value="0-1">0-1 (Black Win)</SelectItem>
+              <SelectItem value="1/2-1/2">½-½ (Draw)</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* Elo Range */}
-        <div className="flex items-center gap-1 w-[200px]">
-          <Input
-            placeholder="Min Elo"
-            type="number"
-            value={minElo}
-            onChange={(e) => setMinElo(e.target.value)}
-            className="h-9 w-[90px]"
-          />
-          <span className="text-slate-400">-</span>
-          <Input
-            placeholder="Max Elo"
-            type="number"
-            value={maxElo}
-            onChange={(e) => setMaxElo(e.target.value)}
-            className="h-9 w-[90px]"
-          />
-        </div>
-
-        {/* Ply Range */}
-        <div className="flex items-center gap-1 w-[200px]">
-          <Input
-            placeholder="Min Ply"
-            type="number"
-            value={minPly}
-            onChange={(e) => setMinPly(e.target.value)}
-            className="h-9 w-[90px]"
-          />
-          <span className="text-slate-400">-</span>
-          <Input
-            placeholder="Max Ply"
-            type="number"
-            value={maxPly}
-            onChange={(e) => setMaxPly(e.target.value)}
-            className="h-9 w-[90px]"
-          />
-        </div>
-
-        {/* Date Range */}
-        {/* <div className="w-[300px]">
-          <DatePickerWithRange value={date} onChange={setDate} />
-        </div> */}
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
-        <div className="flex items-center gap-3">
-          <div className="w-[180px]">
-            <Select value={sortBy} onValueChange={(v) => v && setSortBy(v)}>
-              <SelectTrigger className="h-9 w-full">
-                <SelectValue placeholder="Sort By" />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Country</label>
+            <Select value={filters.country || "all"} onValueChange={(v) => setFilter("country", v)}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder="Any" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="datePlayed">Date Played</SelectItem>
-                <SelectItem value="whiteElo">White Elo</SelectItem>
-                <SelectItem value="blackElo">Black Elo</SelectItem>
-                <SelectItem value="plyCount">Ply Count</SelectItem>
+                <SelectItem value="all">Any</SelectItem>
+                {COUNTRIES.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="h-9 text-slate-500 hover:text-red-600"
-            >
-              <X className="w-4 h-4 mr-1" /> Clear
-            </Button>
-          )}
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Title</label>
+            <Select value={filters.title || "all"} onValueChange={(v) => setFilter("title", v)}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder="Any" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any</SelectItem>
+                {["GM", "IM", "FM", "WGM", "WIM"].map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <Button
-          onClick={applyFilters}
-          disabled={isPending}
-          className="h-9 px-6 bg-[#0060A9] hover:bg-[#004b87]"
-        >
-          {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          <span>{isPending ? "Loading..." : "Apply Filters"}</span>
-        </Button>
+        {/* Ranges */}
+        <div className="space-y-4 pt-1">
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Elo Range</label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                placeholder="Min"
+                value={filters.minElo || ""}
+                onChange={(e) => setFilter("minElo", e.target.value)}
+                className="h-9 text-sm"
+              />
+              <span className="text-slate-300">/</span>
+              <Input
+                type="number"
+                placeholder="Max"
+                value={filters.maxElo || ""}
+                onChange={(e) => setFilter("maxElo", e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Ply Count</label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                placeholder="Min"
+                value={filters.minPly || ""}
+                onChange={(e) => setFilter("minPly", e.target.value)}
+                className="h-9 text-sm"
+              />
+              <span className="text-slate-300">/</span>
+              <Input
+                type="number"
+                placeholder="Max"
+                value={filters.maxPly || ""}
+                onChange={(e) => setFilter("maxPly", e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Date Range */}
+        <div className="space-y-2">
+          <label className="text-[11px] font-bold uppercase text-slate-400 px-1">Date Range</label>
+          <DatePickerWithRange value={date} onChange={handleDateChange} />
+        </div>
+
+        {/* Sort By */}
+        <div className="space-y-2 border-t border-slate-100 pt-4">
+          <label className="text-[11px] font-bold uppercase text-slate-400 px-1 flex items-center gap-1.5">
+            <Filter className="w-3 h-3" /> Sort Order
+          </label>
+          <Select value={filters.sortBy || "datePlayed"} onValueChange={(v) => setFilter("sortBy", v)}>
+            <SelectTrigger className="h-9 text-sm border-none bg-slate-50">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="datePlayed">Date Played</SelectItem>
+              <SelectItem value="whiteElo">White Elo</SelectItem>
+              <SelectItem value="blackElo">Black Elo</SelectItem>
+              <SelectItem value="plyCount">Ply Count</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      {hasActiveFilters && (
+        <Button
+          variant="ghost"
+          onClick={clearFilters}
+          className="rounded-none border-t border-slate-100 h-11 text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+        >
+          <X className="w-3.5 h-3.5 mr-2" /> Clear All Filters
+        </Button>
+      )}
     </div>
   );
 }

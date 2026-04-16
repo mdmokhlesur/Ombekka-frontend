@@ -170,6 +170,33 @@ export function aggregateEco(games: GameData[]) {
   return Array.from(map.values());
 }
 
+export function aggregateResults(games: GameData[]) {
+  const map = {
+    "Wins": 0,
+    "Losses": 0,
+    "Draws": 0
+  };
+  
+  games.forEach(g => {
+    if (g.result === "1-0") map["Wins"]++;
+    else if (g.result === "0-1") map["Losses"]++;
+    else map["Draws"]++;
+  });
+
+  return Object.entries(map).map(([name, value]) => ({ name, value }));
+}
+
+export function aggregateEloTrend(games: GameData[]) {
+  const sorted = [...games]
+    .filter(g => g.datePlayed)
+    .sort((a, b) => new Date(a.datePlayed!).getTime() - new Date(b.datePlayed!).getTime());
+
+  return sorted.slice(-10).map(g => ({
+    date: new Date(g.datePlayed!).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+    avgElo: Math.round((g.whiteElo + g.blackElo) / 2),
+  }));
+}
+
 export function aggregateOpponents(games: GameData[], targetId: number) {
   const map = new Map<
     string,
