@@ -16,7 +16,10 @@ export function DashboardShell() {
   const { games, pagination, isLoading, error } = useGames(filters);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  const hasActiveFilters = Object.values(filters).some(v => v !== undefined && v !== "" && v !== 1 && v !== 10 && v !== "datePlayed");
+  const hasActiveFilters = Object.values(filters).some(
+    (v) =>
+      v !== undefined && v !== "" && v !== 1 && v !== 10 && v !== "datePlayed",
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500">
@@ -24,12 +27,16 @@ export function DashboardShell() {
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-6">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Opposition Research</h1>
-            <p className="text-slate-500 mt-1">Transforming chess games into actionable insights.</p>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+              Player Research
+            </h1>
+            <p className="text-slate-500 mt-1">
+              Transforming chess games into actionable insights.
+            </p>
           </div>
           {hasActiveFilters && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={clearFilters}
               className="hidden md:flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-rose-600 hover:border-rose-100 transition-all rounded-full h-8 px-4"
             >
@@ -38,10 +45,10 @@ export function DashboardShell() {
             </Button>
           )}
         </div>
-        
+
         <div className="flex items-center gap-3">
           {/* Mobile Filter Toggle */}
-          <Button 
+          <Button
             variant="outline"
             className="lg:hidden flex items-center gap-2 text-xs font-bold"
             onClick={() => setShowMobileFilters(!showMobileFilters)}
@@ -67,11 +74,13 @@ export function DashboardShell() {
           </div>
           <div>
             <h3 className="font-bold text-slate-900">Something went wrong</h3>
-            <p className="text-sm text-slate-500 mt-1">We couldn&apos;t load your research data. Please reload the page.</p>
+            <p className="text-sm text-slate-500 mt-1">
+              We couldn&apos;t load your research data. Please reload the page.
+            </p>
           </div>
-          <Button 
-            variant="default" 
-            onClick={() => window.location.reload()} 
+          <Button
+            variant="default"
+            onClick={() => window.location.reload()}
             className="bg-slate-900 hover:bg-slate-800 text-white px-8"
           >
             Reload Analysis
@@ -80,32 +89,39 @@ export function DashboardShell() {
       )}
 
       {/* Stats Overview */}
-      <StatsGrid 
-        games={games} 
-        totalGames={pagination?.total || 0} 
-        isLoading={isLoading} 
+      <StatsGrid
+        games={games}
+        totalGames={pagination?.total || 0}
+        isLoading={isLoading}
         onFilterChange={(key, value) => {
-           if (key === 'clear') clearFilters();
-           else setFilter(key as any, value);
+          if (key === "clear") clearFilters();
+          else setFilter(key as any, value);
         }}
       />
 
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Sidebar Filters */}
-        <aside className={cn(
-          "lg:col-span-3 space-y-6",
-          !showMobileFilters && "hidden lg:block",
-          showMobileFilters && "block animate-in slide-in-from-top-4 duration-300"
-        )}>
+        <aside
+          className={cn(
+            "lg:col-span-3 space-y-6",
+            !showMobileFilters && "hidden lg:block",
+            showMobileFilters &&
+              "block animate-in slide-in-from-top-4 duration-300",
+          )}
+        >
           <div className="sticky top-6">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 px-1">Research Filters</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 px-1">
+              Research Filters
+            </h2>
             <GamesFilter />
-            
+
             <div className="mt-6 p-4 bg-blue-50/50 rounded-xl border border-blue-100 text-blue-900/70">
               <h4 className="text-xs font-bold uppercase mb-2">Pro Tip</h4>
               <p className="text-[11px] leading-relaxed">
-                Filter by <strong>ELO</strong> and <strong>ECO</strong> to identify an opponent&apos;s specific opening weaknesses across different time controls.
+                Filter by <strong>ELO</strong> and <strong>ECO</strong> to
+                identify an opponent&apos;s specific opening weaknesses across
+                different time controls.
               </p>
             </div>
           </div>
@@ -114,30 +130,32 @@ export function DashboardShell() {
         {/* Content Area */}
         <div className="lg:col-span-9 space-y-8">
           {/* Visualizations Section */}
-          <ChartsSection 
-            games={games} 
-            isLoading={isLoading} 
+          <ChartsSection
+            games={games}
+            isLoading={isLoading}
             onFilterChange={(key, value) => {
-               if (key === 'clear') clearFilters();
-               else setFilter(key as any, value);
-            }} 
+              if (key === "clear") clearFilters();
+              else setFilter(key as any, value);
+            }}
           />
 
           <div className="space-y-4">
-             <div className="flex items-center justify-between px-1">
-                <h3 className="font-bold text-slate-900">Search Results</h3>
-                <span className="text-xs text-slate-400">{games.length} games in current view</span>
-             </div>
-             <GamesTable 
-                games={games} 
-                pagination={pagination} 
-                onPageChange={(page) => setFilter('page', page)}
-                onFilterChange={(key, value) => {
-                  if (key === 'clear') clearFilters();
-                  else setFilter(key as any, value);
-                }}
-                isLoading={isLoading} 
-             />
+            <div className="flex items-center justify-between px-1">
+              <h3 className="font-bold text-slate-900">Search Results</h3>
+              <span className="text-xs text-slate-400">
+                {games.length} games in current view
+              </span>
+            </div>
+            <GamesTable
+              games={games}
+              pagination={pagination}
+              onPageChange={(page) => setFilter("page", page)}
+              onFilterChange={(key, value) => {
+                if (key === "clear") clearFilters();
+                else setFilter(key as any, value);
+              }}
+              isLoading={isLoading}
+            />
           </div>
         </div>
       </div>

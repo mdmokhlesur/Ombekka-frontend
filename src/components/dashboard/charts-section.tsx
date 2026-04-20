@@ -31,6 +31,7 @@ interface ChartsSectionProps {
 
 export function ChartsSection({ games, isLoading, onFilterChange }: ChartsSectionProps) {
   const [hasMounted, setHasMounted] = useState(false);
+  const [activeFormat, setActiveFormat] = useState<string>("Classical");
 
   useEffect(() => {
     // We wait for two frames to ensure Next.js hydration AND 
@@ -42,7 +43,17 @@ export function ChartsSection({ games, isLoading, onFilterChange }: ChartsSectio
   }, []);
 
   const resultData = aggregateResults(games).filter(d => d.value > 0);
-  const eloTrendData = aggregateEloTrend(games);
+  
+  // Segment Elo Trend by active format (Classical, Rapid, Blitz, Other)
+  const filteredEloGames = games.filter(g => {
+    const type = g.tournament?.type?.toLowerCase() || "";
+    if (activeFormat === "Other") {
+      return !type || !["classical", "rapid", "blitz"].includes(type);
+    }
+    return type === activeFormat.toLowerCase();
+  });
+  
+  const eloTrendData = aggregateEloTrend(filteredEloGames);
   const ecoData = aggregateEco(games)
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
@@ -127,51 +138,69 @@ export function ChartsSection({ games, isLoading, onFilterChange }: ChartsSectio
       )}
 
       {/* 2. Rating Development - Only if we have trend data */}
-      {eloTrendData.length > 1 && (
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-1">Elo Trend (Sequence)</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[250px] pt-0">
-            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
-              <LineChart data={eloTrendData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="date" 
-                  fontSize={10} 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: "#94a3b8" }}
-                />
-                <YAxis 
-                  fontSize={10} 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: "#94a3b8" }}
-                  domain={["auto", "auto"]} 
-                />
-                <Tooltip
-                  contentStyle={{ 
-                    borderRadius: "12px", 
-                    border: "none", 
-                    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)" 
-                  }}
-                  labelStyle={{ fontWeight: "bold", fontSize: "12px" }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="avgElo"
-                  stroke="#3B82F6"
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: "#3B82F6", strokeWidth: 0 }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                  animationDuration={1500}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
+      <Card className="border-slate-200 shadow-sm relative">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-1">Elo Trend ({activeFormat})</CardTitle>
+          <div className="flex items-center gap-1 bg-slate-50 p-0.5 rounded-lg border border-slate-100">
+            {["Classical", "Rapid", "Blitz", "Other"].map((type) => (
+              <button
+                key={type}
+                onClick={() => setActiveFormat(type)}
+                className={`px-2 py-0.5 text-[9px] font-bold uppercase rounded-md transition-all ${
+                  activeFormat === type 
+                    ? "bg-white text-indigo-600 shadow-sm" 
+                    : "text-slate-400 hover:text-slate-600"
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </CardHeader>
+        <CardContent className="h-[250px] pt-0">
+          <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+            <LineChart data={eloTrendData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis 
+                dataKey="date" 
+                fontSize={10} 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: "#94a3b8" }}
+              />
+              <YAxis 
+                fontSize={10} 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: "#94a3b8" }}
+                domain={["auto", "auto"]} 
+              />
+              <Tooltip
+                contentStyle={{ 
+                  borderRadius: "12px", 
+                  border: "none", 
+                  boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)" 
+                }}
+                labelStyle={{ fontWeight: "bold", fontSize: "12px" }}
+              />
+              <Line
+                type="monotone"
+                dataKey="avgElo"
+                stroke={activeFormat === "Classical" ? "#3B82F6" : activeFormat === "Rapid" ? "#10B981" : activeFormat === "Blitz" ? "#F59E0B" : "#64748b"}
+                strokeWidth={3}
+                dot={{ r: 4, fill: activeFormat === "Classical" ? "#3B82F6" : activeFormat === "Rapid" ? "#10B981" : activeFormat === "Blitz" ? "#F59E0B" : "#64748b", strokeWidth: 0 }}
+                activeDot={{ r: 6, strokeWidth: 0 }}
+                animationDuration={1500}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+          {eloTrendData.length === 0 && (
+            <div className="absolute inset-x-0 bottom-12 flex items-center justify-center pointer-events-none">
+              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest bg-white/80 px-4 py-1 rounded-full">No {activeFormat} data discovered</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* 3. Favorite Openings - Only if we have eco data */}
       {ecoData.length > 0 && (
@@ -242,3 +271,4 @@ export function ChartsSection({ games, isLoading, onFilterChange }: ChartsSectio
     </div>
   );
 }
+
